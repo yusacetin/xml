@@ -1,0 +1,1 @@
+Gets the job done for now, though I plan to improve it later. Can only create XML files, not read or parse them.
