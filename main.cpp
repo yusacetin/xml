@@ -3,13 +3,13 @@
 #include <iostream>
 
 int main() {
-    XML xml;
-    Node n1("N1");
-    Node n2("N2");
-    Node n3("N3");
-    Node n4("N4");
-    Node n5("N5");
-    Node n6("N6");
+    XML::Node n1("N1");
+    XML::Node n2("N2");
+    XML::Node n3("N3");
+    XML::Node n4("N4");
+    XML::Node n5("N5");
+    XML::Node n6("N6");
+    XML::Node n7("N7");
     
     n6.self_closing = true;
     n6.attributes = {
@@ -25,15 +25,22 @@ int main() {
         {"key1", "value1"},
         {"key2", "value2"}
     };
-    
-    n4.children = {n5};
-    n3.children = {n5, n6};
-    n2.children = {n3, n4, n5};
-    n1.children = {n2, n3};
 
-    xml.set_root(n1);
-    xml.print();
-    xml.save("test.xml");
+    n4.add_child(n5);
+    
+    n3.add_child(n5);
+    n3.add_child(n6);
+
+    n2.add_child(n3);
+    n2.add_child(n4);
+    n2.add_child(n5);
+
+    n1.add_child(n2);
+    n1.add_child(n3);
+    n1.add_child(n7);
+
+    n1.print();
+    n1.save("test.xml");
 
     return 0;
 }
