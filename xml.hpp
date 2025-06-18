@@ -13,7 +13,7 @@
 
 namespace XML {
 
-#define SPACES "  "
+#define SPACES "    "
 #define newl "\n"
 
 class Node {
@@ -27,7 +27,12 @@ public:
 
     void add_child(Node node);
     void print();
+    void generate_and_print();
     void save(std::string fpath);
+    void clear_children();
+    size_t get_children_count();
+    Node get_child(size_t i);
+    void traverse();
 
     class Iterator {
     public:
@@ -119,8 +124,32 @@ bool Node::Iterator::operator!=(const Node::Iterator& it) {
     return it.pointer->pos != pointer->pos;
 }
 
-// This could be much more easily implemented using generate()
-// but I specifically wanted to use iterators for fun
+void XML::Node::clear_children() {
+    children.clear();
+}
+
+size_t XML::Node::get_children_count() {
+    return children.size();
+}
+
+Node XML::Node::get_child(size_t i) {
+    if (i < children.size()) {
+        return children.at(i);
+    }
+    return Node("null");
+}
+
+void Node::generate_and_print() {
+    buffer.clear();
+    traverse(this);
+    generate(this);
+    std::cout << "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\" ?>" << newl;
+    std::cout << buffer;
+    std::cout << newl;
+}
+
+// I specifically wanted to use iterators for fun
+// though sometimes it doesn't print correctly
 void Node::print() {
     std::cout << "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\" ?>" << newl;
     std::stack<Node> nstack;
@@ -210,19 +239,14 @@ Node::Iterator Node::Iterator::operator++(int) {
     return temp;
 }
 
+void Node::traverse() {
+    traverse(this);
+}
+
 Node* Node::traverse(Node* n) {
     if (n->prev != nullptr) {
         n->prev->next = n;
     }
-
-    /*std::cout << newl;
-    std::cout << "[DEBUG] current node is " << n->tag << ":" << n->get_pos() << newl;
-    if (n->prev != nullptr) {
-        std::cout << "[DEBUG] prev node is " << n->prev->tag << ":" << n->prev->get_pos() << newl;
-        std::cout << "[DEBUG] next of prev node is " << n->prev->next->tag << ":" << n->prev->next->get_pos() << newl;
-    } else {
-        std::cout << "[DEBUG] current node does not have prev" << newl;
-    }*/
 
     Node* n_last = n; // if there are no children, return self
 
@@ -293,9 +317,14 @@ void Node::open_tag(Node node) {
     }
 
     if (node.self_closing) {
-        buffer += "/>\n";
+        buffer += "/>";
+        buffer += newl;
     } else {
-        buffer += ">\n";
+        buffer += ">";
+    }
+
+    if (!(node.children.empty()) && !(node.self_closing)) {
+        buffer += newl;
     }
     
 }
@@ -306,8 +335,10 @@ void Node::close_tag(Node node) {
         return;
     }
 
-    for (size_t i = 0; i < node.pos.size()-1; i++) {
-        buffer += SPACES;
+    if (!node.children.empty()) {
+        for (size_t i = 0; i < node.pos.size()-1; i++) {
+            buffer += SPACES;
+        }
     }
     buffer += "</";
     buffer += node.tag;
@@ -315,14 +346,16 @@ void Node::close_tag(Node node) {
 }
 
 void Node::write_content(Node node) {
-    for (size_t i = 0; i < node.pos.size(); i++) {
-        buffer += SPACES;
-    }
+    //for (size_t i = 0; i < node.pos.size(); i++) {
+    //    buffer += SPACES;
+    //}
     buffer += node.content;
-    buffer += newl;
+    //buffer += newl;
 }
 
 void Node::save(std::string fpath) {
+    buffer.clear();
+    traverse(this);
     generate(this);
     std::ofstream ofs(fpath);
     ofs << "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\" ?>" << newl;

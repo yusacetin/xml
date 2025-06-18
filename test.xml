@@ -1,27 +1,18 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
 <N1>
-  <N2>
+    <N2>
+        <N3 key1="value1" key2="value2">
+            <N5 at5="5val">this is what N5 says</N5>
+            <N6 atkey="atval"/>
+        </N3>
+        <N4>
+            <N5 at5="5val">this is what N5 says</N5>
+        </N4>
+        <N5 at5="5val">this is what N5 says</N5>
+    </N2>
     <N3 key1="value1" key2="value2">
-      <N5 at5="5val">
-        this is what N5 says
-      </N5>
-      <N6 atkey="atval"/>
+        <N5 at5="5val">this is what N5 says</N5>
+        <N6 atkey="atval"/>
     </N3>
-    <N4>
-      <N5 at5="5val">
-        this is what N5 says
-      </N5>
-    </N4>
-    <N5 at5="5val">
-      this is what N5 says
-    </N5>
-  </N2>
-  <N3 key1="value1" key2="value2">
-    <N5 at5="5val">
-      this is what N5 says
-    </N5>
-    <N6 atkey="atval"/>
-  </N3>
-  <N7>
-  </N7>
+    <N7></N7>
 </N1>
