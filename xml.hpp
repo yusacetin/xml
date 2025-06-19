@@ -16,9 +16,15 @@ namespace XML {
 #define SPACES "    "
 #define newl "\n"
 
+////////////////////////////
+// Node class declaration //
+////////////////////////////
+
 class Node {
 public:
     Node(std::string tag_name);
+    bool operator==(const Node& n) const;
+    bool operator!=(const Node& n) const;
 
     bool self_closing = false;
     std::string tag;
@@ -26,60 +32,64 @@ public:
     std::string content; // textContent, ignored if there are any children
 
     void add_child(Node node);
-    void print_tree();
     void print();
+    void print_tree();
     void save(std::string fpath);
     void clear_children();
     size_t get_children_count();
     Node get_child(size_t i);
 
-    class Iterator {
-    public:
-        Iterator(Node* n);
-        Node operator*() const;
-        Node* operator->();
-        Iterator& operator++();
-        Iterator operator++(int);
-        bool operator==(const Iterator& it);
-        bool operator!=(const Iterator& it);
-
-    private:
-        Node* pointer;
-    };
-
+    class Iterator;
     Iterator begin();
     Iterator end();
-    bool operator==(const Node& n) const;
-    bool operator!=(const Node& n) const;
 
 private:
     Node* parent = nullptr;
     std::vector<Node> children;
     Node* next = nullptr;
     Node* prev = nullptr;
+    std::string buffer;
+    std::vector<int> pos;
 
     Node* traverse(Node* n);
-    std::vector<int> pos;
-    std::string get_pos();
-    Node* last_node_pointer(Node* nodes);
     void generate(Node* n);
     void open_tag(Node n);
     void close_tag(Node n);
     void write_content(Node n);
+    std::string get_pos();
+    Node* last_node_pointer(Node* nodes);
 
     static std::shared_ptr<Node> dummy;
-    std::string buffer;
-    
 };
 
-std::shared_ptr<Node> Node::dummy = std::make_shared<Node>("dummy");
+////////////////////////////////
+// Iterator class declaration //
+////////////////////////////////
+
+class Node::Iterator {
+public:
+    Iterator(Node* n);
+    Node operator*() const;
+    Node* operator->();
+    Iterator& operator++();
+    Iterator operator++(int);
+    bool operator==(const Iterator& it);
+    bool operator!=(const Iterator& it);
+
+private:
+    Node* pointer;
+};
+
+////////////////////////////
+// Node class definitions //
+////////////////////////////
+
+// Public functions
 
 Node::Node(std::string tag_name) {
     tag = tag_name;
     pos = {-1};
 }
-
-Node::Iterator::Iterator(Node* n) : pointer(n) {}
 
 bool Node::operator==(const Node& n) const {
     return pos == n.pos;
@@ -89,15 +99,6 @@ bool Node::operator!=(const Node& n) const {
     return pos != n.pos;
 }
 
-Node* Node::last_node_pointer(Node* n) {
-    if (n->children.empty()) {
-        return n;
-    }
-
-    size_t last_i = n->children.size() - 1;
-    return last_node_pointer(&(n->children.at(last_i)));
-}
-
 void Node::add_child(Node node) {
     Node* node_ptr = &node;
     node_ptr->prev = last_node_pointer(this);
@@ -105,22 +106,39 @@ void Node::add_child(Node node) {
     children.push_back(*node_ptr);
 }
 
-Node::Iterator Node::begin() {
-    pos = {0};
+void Node::print() {
+    buffer.clear();
     traverse(this);
-    return Iterator(this);
+    generate(this);
+    std::cout << "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\" ?>" << newl;
+    std::cout << buffer;
+    std::cout << newl;
 }
 
-Node::Iterator Node::end() {
-    return Iterator(Node::dummy.get());
+void Node::print_tree() {
+    for (auto it = begin(); it != end(); ++it) {
+        size_t indent = it->pos.size()-1;
+        for (size_t i = 0; i < indent; i++) {
+            std::cout << SPACES;
+        }
+        std::cout << it->tag;
+        if (!it->children.empty()) {
+            std::cout << ":" << newl;
+        } else {
+            std::cout << newl;
+        }
+    }
 }
 
-bool Node::Iterator::operator==(const Node::Iterator& it) {
-    return it.pointer->pos == pointer->pos;
-}
-
-bool Node::Iterator::operator!=(const Node::Iterator& it) {
-    return it.pointer->pos != pointer->pos;
+void Node::save(std::string fpath) {
+    buffer.clear();
+    traverse(this);
+    generate(this);
+    std::ofstream ofs(fpath);
+    ofs << "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\" ?>" << newl;
+    ofs << buffer;
+    ofs.close();
+    std::cout << "Saved " << fpath << newl;
 }
 
 void XML::Node::clear_children() {
@@ -138,54 +156,19 @@ Node XML::Node::get_child(size_t i) {
     return Node("null");
 }
 
-void Node::print() {
-    buffer.clear();
+Node::Iterator Node::begin() {
+    pos = {0};
     traverse(this);
-    generate(this);
-    std::cout << "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\" ?>" << newl;
-    std::cout << buffer;
-    std::cout << newl;
+    return Iterator(this);
 }
 
-// I specifically wanted to use iterators for fun
-// though sometimes it doesn't print correctly
-void Node::print_tree() {
-    for (auto it = begin(); it != end(); ++it) {
-        size_t indent = it->pos.size()-1;
-        for (size_t i = 0; i < indent; i++) {
-            std::cout << SPACES;
-        }
-        std::cout << it->tag;
-        if (!it->children.empty()) {
-            std::cout << ":" << newl;
-        } else {
-            std::cout << newl;
-        }
-    }
+Node::Iterator Node::end() {
+    return Iterator(Node::dummy.get());
 }
 
-Node Node::Iterator::operator*() const {
-    return *pointer;
-}
+// Private functions and variables
 
-Node* Node::Iterator::operator->() {
-    return pointer;
-}
-
-Node::Iterator& Node::Iterator::operator++() {
-    if (pointer->next == nullptr) {
-        pointer = Node::dummy.get();
-        return *this;
-    }
-    pointer = pointer->next;
-    return *this;
-}
-
-Node::Iterator Node::Iterator::operator++(int) {
-    Iterator temp = *this;
-    ++(*this); // just redirect to prefix operator
-    return temp;
-}
+std::shared_ptr<Node> Node::dummy = std::make_shared<Node>("dummy");
 
 Node* Node::traverse(Node* n) {
     if (n->prev != nullptr) {
@@ -213,17 +196,7 @@ Node* Node::traverse(Node* n) {
     return n_last;
 }
 
-std::string Node::get_pos() {
-    std::string s = "{";
-    for (size_t i = 0; i < pos.size(); i++) {
-        s += std::to_string(pos.at(i));
-        if (i != pos.size()-1) {
-            s += ",";
-        }
-    }
-    s += "}";
-    return s;
-}
+
 
 void Node::generate(Node* n) {
     open_tag(*n);
@@ -290,22 +263,65 @@ void Node::close_tag(Node node) {
 }
 
 void Node::write_content(Node node) {
-    //for (size_t i = 0; i < node.pos.size(); i++) {
-    //    buffer += SPACES;
-    //}
     buffer += node.content;
-    //buffer += newl;
 }
 
-void Node::save(std::string fpath) {
-    buffer.clear();
-    traverse(this);
-    generate(this);
-    std::ofstream ofs(fpath);
-    ofs << "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\" ?>" << newl;
-    ofs << buffer;
-    ofs.close();
-    std::cout << "Saved " << fpath << newl;
+std::string Node::get_pos() {
+    std::string s = "{";
+    for (size_t i = 0; i < pos.size(); i++) {
+        s += std::to_string(pos.at(i));
+        if (i != pos.size()-1) {
+            s += ",";
+        }
+    }
+    s += "}";
+    return s;
+}
+
+Node* Node::last_node_pointer(Node* n) {
+    if (n->children.empty()) {
+        return n;
+    }
+
+    size_t last_i = n->children.size() - 1;
+    return last_node_pointer(&(n->children.at(last_i)));
+}
+
+////////////////////////////////
+// Iterator class definitions //
+////////////////////////////////
+
+Node::Iterator::Iterator(Node* n) : pointer(n) {}
+
+Node Node::Iterator::operator*() const {
+    return *pointer;
+}
+
+Node* Node::Iterator::operator->() {
+    return pointer;
+}
+
+Node::Iterator& Node::Iterator::operator++() {
+    if (pointer->next == nullptr) {
+        pointer = Node::dummy.get();
+        return *this;
+    }
+    pointer = pointer->next;
+    return *this;
+}
+
+Node::Iterator Node::Iterator::operator++(int) {
+    Iterator temp = *this;
+    ++(*this); // just redirect to prefix operator
+    return temp;
+}
+
+bool Node::Iterator::operator==(const Node::Iterator& it) {
+    return it.pointer->pos == pointer->pos;
+}
+
+bool Node::Iterator::operator!=(const Node::Iterator& it) {
+    return it.pointer->pos != pointer->pos;
 }
 
 } // close namespace XML
