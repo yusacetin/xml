@@ -39,7 +39,7 @@ int main() {
     n1.add_child(n3);
     n1.add_child(n7);
 
-    n1.print();
+    n1.print_tree();
     n1.save("test.xml");
 
     return 0;

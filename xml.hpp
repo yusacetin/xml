@@ -26,13 +26,12 @@ public:
     std::string content; // textContent, ignored if there are any children
 
     void add_child(Node node);
+    void print_tree();
     void print();
-    void generate_and_print();
     void save(std::string fpath);
     void clear_children();
     size_t get_children_count();
     Node get_child(size_t i);
-    void traverse();
 
     class Iterator {
     public:
@@ -139,7 +138,7 @@ Node XML::Node::get_child(size_t i) {
     return Node("null");
 }
 
-void Node::generate_and_print() {
+void Node::print() {
     buffer.clear();
     traverse(this);
     generate(this);
@@ -150,70 +149,19 @@ void Node::generate_and_print() {
 
 // I specifically wanted to use iterators for fun
 // though sometimes it doesn't print correctly
-void Node::print() {
-    std::cout << "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\" ?>" << newl;
-    std::stack<Node> nstack;
+void Node::print_tree() {
     for (auto it = begin(); it != end(); ++it) {
-        // First, close any potential previously opened nodes
-        if (!nstack.empty()) {
-            if (it->pos.size() == nstack.top().pos.size()) {
-                for (size_t i = 0; i < it->pos.size() - 1; i++) {
-                    std::cout << SPACES;
-                }
-                Node n_top = nstack.top();
-                std::cout << "</";
-                std::cout << n_top.tag;
-                std::cout << ">" << newl;
-
-                nstack.pop();
-            }
-        }
-        
-        // Now begin writing current node
-
-        for (size_t i = 0; i < it->pos.size() - 1; i++) {
+        size_t indent = it->pos.size()-1;
+        for (size_t i = 0; i < indent; i++) {
             std::cout << SPACES;
         }
-
-        std::cout << "<" << it->tag;
-        for (auto it_attr = it->attributes.begin(); it_attr != it->attributes.end(); ++it_attr) {
-            std::cout << " ";
-            std::cout << it_attr->first;
-            std::cout << "=";
-            std::cout << "\"";
-            std::cout << it_attr->second;
-            std::cout << "\"";
-        }
-
-        if (it->self_closing) {
-            std::cout << "/>\n";
+        std::cout << it->tag;
+        if (!it->children.empty()) {
+            std::cout << ":" << newl;
         } else {
-            std::cout << ">\n";
-            if (it->children.empty()) {
-                if (it->content != "") {
-                    for (size_t i = 0; i < it->pos.size(); i++) {
-                        std::cout << SPACES;
-                    }
-                    std::cout << it->content << newl;
-                }
-                
-                for (size_t i = 0; i < it->pos.size() - 1; i++) {
-                    std::cout << SPACES;
-                }
-                std::cout << "</";
-                std::cout << it->tag;
-                std::cout << ">" << newl;
-            }
-        }
-
-        if (it->children.size() > 0) {
-            nstack.push(*it);
+            std::cout << newl;
         }
     }
-
-    std::cout << "</";
-    std::cout << tag;
-    std::cout << ">" << newl;
 }
 
 Node Node::Iterator::operator*() const {
@@ -237,10 +185,6 @@ Node::Iterator Node::Iterator::operator++(int) {
     Iterator temp = *this;
     ++(*this); // just redirect to prefix operator
     return temp;
-}
-
-void Node::traverse() {
-    traverse(this);
 }
 
 Node* Node::traverse(Node* n) {
@@ -361,6 +305,7 @@ void Node::save(std::string fpath) {
     ofs << "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\" ?>" << newl;
     ofs << buffer;
     ofs.close();
+    std::cout << "Saved " << fpath << newl;
 }
 
 } // close namespace XML
