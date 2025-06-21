@@ -14,7 +14,7 @@
 namespace XML {
 
 #define SPACES "    "
-#define newl "\n"
+inline constexpr const char* newl = "\n";
 
 ////////////////////////////
 // Node class declaration //
@@ -86,27 +86,27 @@ private:
 
 // Public functions
 
-Node::Node(std::string tag_name) {
+inline Node::Node(std::string tag_name) {
     tag = tag_name;
     pos = {-1};
 }
 
-bool Node::operator==(const Node& n) const {
+inline bool Node::operator==(const Node& n) const {
     return pos == n.pos;
 }
 
-bool Node::operator!=(const Node& n) const {
+inline bool Node::operator!=(const Node& n) const {
     return pos != n.pos;
 }
 
-void Node::add_child(Node node) {
+inline void Node::add_child(Node node) {
     Node* node_ptr = &node;
     node_ptr->prev = last_node_pointer(this);
     node_ptr->parent = this;
     children.push_back(*node_ptr);
 }
 
-void Node::print() {
+inline void Node::print() {
     buffer.clear();
     traverse(this);
     generate(this);
@@ -115,7 +115,7 @@ void Node::print() {
     std::cout << newl;
 }
 
-void Node::print_tree() {
+inline void Node::print_tree() {
     for (auto it = begin(); it != end(); ++it) {
         size_t indent = it->pos.size()-1;
         for (size_t i = 0; i < indent; i++) {
@@ -130,7 +130,7 @@ void Node::print_tree() {
     }
 }
 
-void Node::save(std::string fpath) {
+inline void Node::save(std::string fpath) {
     buffer.clear();
     traverse(this);
     generate(this);
@@ -138,39 +138,38 @@ void Node::save(std::string fpath) {
     ofs << "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\" ?>" << newl;
     ofs << buffer;
     ofs.close();
-    std::cout << "Saved " << fpath << newl;
 }
 
-void XML::Node::clear_children() {
+inline void XML::Node::clear_children() {
     children.clear();
 }
 
-size_t XML::Node::get_children_count() {
+inline size_t XML::Node::get_children_count() {
     return children.size();
 }
 
-Node XML::Node::get_child(size_t i) {
+inline Node XML::Node::get_child(size_t i) {
     if (i < children.size()) {
         return children.at(i);
     }
     return Node("null");
 }
 
-Node::Iterator Node::begin() {
+inline Node::Iterator Node::begin() {
     pos = {0};
     traverse(this);
     return Iterator(this);
 }
 
-Node::Iterator Node::end() {
+inline Node::Iterator Node::end() {
     return Iterator(Node::dummy.get());
 }
 
 // Private functions and variables
 
-std::shared_ptr<Node> Node::dummy = std::make_shared<Node>("dummy");
+inline std::shared_ptr<Node> Node::dummy = std::make_shared<Node>("dummy");
 
-Node* Node::traverse(Node* n) {
+inline Node* Node::traverse(Node* n) {
     if (n->prev != nullptr) {
         n->prev->next = n;
     }
@@ -196,9 +195,7 @@ Node* Node::traverse(Node* n) {
     return n_last;
 }
 
-
-
-void Node::generate(Node* n) {
+inline void Node::generate(Node* n) {
     open_tag(*n);
 
     std::vector<Node> n_children = n->children;
@@ -217,7 +214,7 @@ void Node::generate(Node* n) {
     }
 }
 
-void Node::open_tag(Node node) {
+inline void Node::open_tag(Node node) {
     for (size_t i = 0; i < node.pos.size()-1; i++) {
         buffer += SPACES;
     }
@@ -246,7 +243,7 @@ void Node::open_tag(Node node) {
     
 }
 
-void Node::close_tag(Node node) {
+inline void Node::close_tag(Node node) {
     if (node.self_closing) {
         std::cerr << "Error: not supposed to close self closing tag" << newl;
         return;
@@ -262,11 +259,11 @@ void Node::close_tag(Node node) {
     buffer += ">\n";
 }
 
-void Node::write_content(Node node) {
+inline void Node::write_content(Node node) {
     buffer += node.content;
 }
 
-std::string Node::get_pos() {
+inline std::string Node::get_pos() {
     std::string s = "{";
     for (size_t i = 0; i < pos.size(); i++) {
         s += std::to_string(pos.at(i));
@@ -278,7 +275,7 @@ std::string Node::get_pos() {
     return s;
 }
 
-Node* Node::last_node_pointer(Node* n) {
+inline Node* Node::last_node_pointer(Node* n) {
     if (n->children.empty()) {
         return n;
     }
@@ -291,17 +288,17 @@ Node* Node::last_node_pointer(Node* n) {
 // Iterator class definitions //
 ////////////////////////////////
 
-Node::Iterator::Iterator(Node* n) : pointer(n) {}
+inline Node::Iterator::Iterator(Node* n) : pointer(n) {}
 
-Node Node::Iterator::operator*() const {
+inline Node Node::Iterator::operator*() const {
     return *pointer;
 }
 
-Node* Node::Iterator::operator->() {
+inline Node* Node::Iterator::operator->() {
     return pointer;
 }
 
-Node::Iterator& Node::Iterator::operator++() {
+inline Node::Iterator& Node::Iterator::operator++() {
     if (pointer->next == nullptr) {
         pointer = Node::dummy.get();
         return *this;
@@ -310,17 +307,17 @@ Node::Iterator& Node::Iterator::operator++() {
     return *this;
 }
 
-Node::Iterator Node::Iterator::operator++(int) {
+inline Node::Iterator Node::Iterator::operator++(int) {
     Iterator temp = *this;
     ++(*this); // just redirect to prefix operator
     return temp;
 }
 
-bool Node::Iterator::operator==(const Node::Iterator& it) {
+inline bool Node::Iterator::operator==(const Node::Iterator& it) {
     return it.pointer->pos == pointer->pos;
 }
 
-bool Node::Iterator::operator!=(const Node::Iterator& it) {
+inline bool Node::Iterator::operator!=(const Node::Iterator& it) {
     return it.pointer->pos != pointer->pos;
 }
 
