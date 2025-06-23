@@ -1,3 +1,18 @@
+/*
+This file is part of Simple XML Library.
+
+Simple XML Library is free software: you can redistribute it and/or modify it under
+the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of
+the License, or (at your option) any later version.
+
+Simple XML Library is distributed in the hope that it will be useful, but WITHOUT
+ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+See the GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License along with Simple XML Library.
+If not, see <https://www.gnu.org/licenses/>.
+*/
+
 #ifndef XML_HPP
 #define XML_HPP
 
@@ -10,6 +25,7 @@
 #include <thread>
 #include <memory>
 #include <stack>
+#include <sstream>
 
 namespace XML {
 
@@ -32,12 +48,13 @@ public:
     std::string content; // textContent, ignored if there are any children
 
     void add_child(Node node);
-    void print();
+    void print(bool include_header = true);
     void print_tree();
     void save(std::string fpath);
     void clear_children();
     size_t get_children_count();
     Node get_child(size_t i);
+    std::string get_string(bool include_header = true);
 
     class Iterator;
     Iterator begin();
@@ -106,11 +123,13 @@ inline void Node::add_child(Node node) {
     children.push_back(*node_ptr);
 }
 
-inline void Node::print() {
+inline void Node::print(bool include_header) {
     buffer.clear();
     traverse(this);
     generate(this);
-    std::cout << "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\" ?>" << newl;
+    if (include_header) {
+        std::cout << "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\" ?>" << newl;
+    }
     std::cout << buffer;
     std::cout << newl;
 }
@@ -153,6 +172,18 @@ inline Node XML::Node::get_child(size_t i) {
         return children.at(i);
     }
     return Node("null");
+}
+
+inline std::string XML::Node::get_string(bool include_header) {
+    buffer.clear();
+    traverse(this);
+    generate(this);
+    std::stringstream ss;
+    if (include_header) {
+        ss << "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\" ?>" << newl;
+    }
+    ss << buffer;
+    return ss.str();
 }
 
 inline Node::Iterator Node::begin() {
