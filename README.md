@@ -1,6 +1,6 @@
-## [WIP] Simple XML Library
+## Simple XML Library
 
-Generates XML files. That's it.
+Generates XML files. That's it. I wrote it to use it in [my docx library](https://github.com/yusacetin/docx).
 
 ### Structure
 
