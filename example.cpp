@@ -55,7 +55,9 @@ int main() {
     n1.add_child(n7);
 
     n1.print_tree();
-    n1.save("test.xml");
+    n1.save("sample.xml");
+
+    std::cout << "Saved sample.xml\n";
 
     return 0;
 }

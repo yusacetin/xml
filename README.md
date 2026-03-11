@@ -4,7 +4,7 @@ Generates XML files. That's it. I wrote it to use it in [my docx library](https:
 
 ### Structure
 
-The library manages `XML::Node` objects (there is no single `XML` object). `XML::Node`s make up a tree structure that can be iterated through. Each `XML::Node` has private `prev` and `next` pointers that form a doubly linked list. They also have a private `parent` pointer that points to their parent `XML::Node` and a vector of `XML::Node`s to store their children. See `main.cpp` for a usage example.
+The library manages `XML::Node` objects (there is no single `XML` object). `XML::Node`s make up a tree structure that can be iterated through. Each `XML::Node` has private `prev` and `next` pointers that form a doubly linked list. They also have a private `parent` pointer that points to their parent `XML::Node` and a vector of `XML::Node`s to store their children. See `example.cpp` for a usage example. Running `example.cpp` outputs the `sample.xml` file.
 
 ### License
 
